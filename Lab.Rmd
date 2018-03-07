@@ -1,0 +1,316 @@
+---
+title: "Math Lab"
+author: "Andrew Chen"
+date: "2/23/2018"
+output: html_document
+---
+
+```{r}
+library(multiway)
+library(dplyr)
+library(magrittr)
+```
+
+###Cleaning Data
+```{r}
+lcd_data = read.csv('~/Desktop/Research/Extension_1.18.18_deidentified.csv', stringsAsFactors = FALSE)
+
+lcd_data = lcd_data %>% filter(random != 5089 & random != 9502 & random != 6531) %>% select(7:206) %>% slice(3:99)
+
+for (i in 1:200) {
+  lcd_data[, i] = as.integer(unlist(lcd_data[, i]))
+}
+
+lcd_data = lcd_data %>% filter(attcheck1_1 > 90 & attcheck3_1 > 90 & attcheck5_1 > 90 & attcheck7_1 > 90 & attcheck9_1 > 90)
+
+lcd_data = lcd_data[-c(21,42,63,84,100,121,142,163,184,200)]
+```
+
+###Generating vectors of compared numbers
+```{r}
+numbers = c(5,14,16,9,29,8,11,20,18,21)
+numbers2 = c(7,25,12,17,28,6,13,4,27,10)
+num_mat = matrix(0,10,10)
+for (i in 1:10) {
+  num_mat[i,] = numbers
+  numbers = numbers[c(2:10, 1)]
+}
+
+for (j in 1:10) {
+  num_mat = cbind(num_mat, numbers2)
+  numbers2 = numbers2[c(2:10,1)]
+}
+
+colnames(num_mat) = rep(NULL, 20)
+```
+
+###Generating vectors of compared fields
+```{r}
+field1 <- c(rep(1, 10), rep(c(1, 11), 5))
+field2 <- c(2,16,3,17,4,18,5,19,6,20,11,rep(12:15, each = 2), 16)
+```
+
+###Changing columns into numbers that are compared
+```{r}
+x = 0
+f1 = 1
+f2 = 1
+while (i + x <= 190) {
+  if (x == 80 | x == 185) {
+    for (i in 1:5) {
+    colnames(lcd_data)[i + x] = paste0(num_mat[i, field1[f1]], "/", num_mat[i, field2[f2]])
+    }
+    f1 = f1 + 1
+    f2 = f2 + 1
+    x = x + 5
+    next
+  } else {
+    for (i in 1:10) {
+    colnames(lcd_data)[i + x] = paste0(num_mat[i, field1[f1]], "/", num_mat[i, field2[f2]])
+    }
+  }
+  x = x + 10
+  f1 = f1 + 1
+  f2 = f2 + 1
+  i = 5
+}
+
+avgs = colMeans(lcd_data)
+```
+
+###Making similarity matrix for avgs
+```{r}
+numbers3 = as.character(c(numbers, numbers2))
+sim_mat = matrix(0, 20, 20)
+rownames(sim_mat) = numbers3
+colnames(sim_mat) = numbers3
+```
+
+###Fitting similarity ratings within matrix
+```{r}
+for (i in 1:20) {
+  sim_mat[i, i] = 100
+}
+
+for (i in 1:190) {
+  avg = avgs[i]
+  nums = unlist(strsplit(names(avgs)[i], split = "/"))
+  sim_mat[nums[1], nums[2]] = avg
+  sim_mat[nums[2], nums[1]] = avg
+}
+
+```
+
+###Making similarity matrices for 2 sets of 10 numbers
+```{r}
+avgs1 = colMeans(select(lcd_data, c(1:10, 21:30, 41:50, 61:70, 81:85)))
+avgs2 = colMeans(select(lcd_data, c(106:115, 126:135, 146:155, 166:175, 186:190)))
+sim_mat1 = matrix(0,10,10)
+sim_mat2 = matrix(0,10,10)
+rownames(sim_mat1) = as.character(numbers)
+colnames(sim_mat1) = as.character(numbers)
+rownames(sim_mat2) = as.character(numbers2)
+colnames(sim_mat2) = as.character(numbers2)
+```
+
+###Fitting similarity ratings within matrices
+```{r}
+for (i in 1:10) {
+  sim_mat1[i, i] = 100
+  sim_mat2[i, i] = 100
+}
+
+for (i in 1:45) {
+  avg1 = avgs1[i]
+  avg2 = avgs2[i]
+  nums1 = unlist(strsplit(names(avgs1)[i], split = "/"))
+  nums2 = unlist(strsplit(names(avgs2)[i], split = "/"))
+  sim_mat1[nums1[1], nums1[2]] = avg1
+  sim_mat1[nums1[2], nums1[1]] = avg1
+  sim_mat2[nums2[1], nums2[2]] = avg2
+  sim_mat2[nums2[2], nums2[1]] = avg2
+}
+
+```
+
+###INDSCAL with all 84 participants, 20 numbers (trying out graphing)
+```{r}
+indscal_all_mat = array(0, dim = c(20,20,84))
+
+for (i in 1:84) {
+  ind = lcd_data[i, ]
+  ind_sim_mat = matrix(0,20,20)
+  rownames(ind_sim_mat) = rownames(sim_mat)
+  colnames(ind_sim_mat) = colnames(sim_mat)
+  for (j in 1:20) {
+    ind_sim_mat[j, j] = 100
+  }
+  for (k in 1:190) {
+    nums = unlist(strsplit(names(ind)[k], split = "/"))
+    ind_sim_mat[nums[1], nums[2]] = ind[[k]]
+    ind_sim_mat[nums[2], nums[1]] = ind[[k]]
+  }
+  indscal_all_mat[,,i] = 1-ind_sim_mat/100
+}
+
+indscal_all = indscal(indscal_all_mat, nfac = 2)
+plot(indscal_all$B, cex = .1)
+abline(h=0, v=0)
+text(indscal_all$B[,1], indscal_all$B[,2], labels = as.integer(numbers3))
+```
+
+###INDSCAL for 2 sets of 10 numbers, all participants
+```{r}
+indscal_all_mat1 = array(0, dim = c(10,10,84))
+indscal_all_mat2 = array(0, dim = c(10,10,84))
+
+for (i in 1:84) {
+  ind_sim_mat1 = matrix(0,10,10)
+  ind_sim_mat2 = matrix(0,10,10)
+  rownames(ind_sim_mat1) = rownames(sim_mat1)
+  colnames(ind_sim_mat1) = colnames(sim_mat1)
+  rownames(ind_sim_mat2) = rownames(sim_mat2)
+  colnames(ind_sim_mat2) = colnames(sim_mat2)
+  
+  ind1_1 = lcd_data[i, c(1:10, 21:30, 41:50, 61:70, 81:85)]
+  ind1_2 = lcd_data[i, c(106:115, 126:135, 146:155, 166:175, 186:190)]
+  
+  for (j in 1:10) {
+    ind_sim_mat1[j, j] = 100
+    ind_sim_mat2[j, j] = 100
+  }
+  
+  for (k in 1:45) {
+    nums1 = unlist(strsplit(names(ind1_1)[k], split = "/"))
+    nums2 = unlist(strsplit(names(ind1_2)[k], split = "/"))
+    ind_sim_mat1[nums1[1], nums1[2]] = ind1_1[[k]]
+    ind_sim_mat1[nums1[2], nums1[1]] = ind1_1[[k]]
+    ind_sim_mat2[nums2[1], nums2[2]] = ind1_2[[k]]
+    ind_sim_mat2[nums2[2], nums2[1]] = ind1_2[[k]]
+  }
+  
+  indscal_all_mat1[,,i] = 1-ind_sim_mat1/100
+  indscal_all_mat2[,,i] = 1-ind_sim_mat2/100
+}
+
+indscal_all1 = indscal(indscal_all_mat1, nfac = 11)
+indscal_all2 = indscal(indscal_all_mat2, nfac = 11)
+```
+
+###Graphing out that INDSCAL
+```{r}
+plot(indscal_all1$B, cex = .1)
+abline(h=0, v=0)
+text(indscal_all1$B[,1], indscal_all1$B[,2], labels = numbers)
+
+plot(indscal_all2$B, cex = .1)
+abline(h=0, v=0)
+text(indscal_all2$B[,1], indscal_all2$B[,2], labels = numbers2)
+```
+###B and C Matrices for INDSCAL of 2 sets of 10 numbers
+```{r}
+indscal_all1$B
+indscal_all1$C
+indscal_all2$B
+indscal_all2$C
+```
+
+###INDSCAL for 2 sets of 10 numbers, avgs (how to graph??)
+```{r}
+avg_3d1 = array(0, dim = c(10,10,1))
+avg_3d2 = array(0, dim = c(10,10,1))
+avg_3d1[,,1] = 1-sim_mat1/100
+avg_3d2[,,1] = 1-sim_mat2/100
+indscal_avg1 = indscal(avg_3d1, nfac = 1)
+indscal_avg2 = indscal(avg_3d2, nfac = 1)
+```
+
+###Trying out INDSCAL with avgs, 20 numbers (how to graph??)
+```{r}
+avg_3d = array(1 - sim_mat/100, dim = c(20,20,1))
+indscal_avg = indscal(avg_3d, nfac = 1)
+indscal_avg
+```
+
+###MDS of avgs, 20 numbers
+```{r}
+mds_avg = cmdscale(1-sim_mat/100)
+plot(mds_avg, cex = .1)
+abline(v=0,h=0)
+text(mds_avg[,1], mds_avg[,2], labels = as.integer(numbers3))
+```
+###MDS of avgs, 2 sets of 10 numbers
+```{r}
+mds_avg1 = cmdscale(1-sim_mat1/100)
+mds_avg2 = cmdscale(1-sim_mat2/100)
+
+plot(mds_avg1,cex = .1)
+abline(v=0,h=0)
+text(mds_avg1[,1], mds_avg1[,2], labels = numbers)
+
+plot(mds_avg2,cex = .1)
+abline(v=0,h=0)
+text(mds_avg2[,1], mds_avg2[,2], labels = numbers2)
+```
+
+###Creating Feature Matrix for 1st set of 10 numbers
+```{r}
+feat_mat1 = matrix(0,10,11)
+rownames(feat_mat1) = numbers
+colnames(feat_mat1) = c("S","M","L","even","odd","mult3","mult4","mult5","mult7","square","prime")
+
+#prime function
+is_prime = function(x){
+  sum(x/1:x == x %/% 1:x) == 2
+}
+
+for (i in 1:10) {
+  x = numbers[i]
+  if (x < 10) {
+    feat_mat1[i,1] = 1
+  } 
+  if (x >= 10 & x < 20) {
+    feat_mat1[i,2] = 1
+  } 
+  if (x >= 20 & x < 30) {
+    feat_mat1[i,3] = 1
+  } 
+  if (x%%2 == 0) {
+    feat_mat1[i,4] = 1
+  } 
+  if (x%%2 != 0) {
+    feat_mat1[i,5] = 1
+  } 
+  if (x%%3 == 0) {
+    feat_mat1[i,6] = 1
+  } 
+  if (x%%4 == 0) {
+    feat_mat1[i,7] = 1
+  } 
+  if (x%%5 == 0) {
+    feat_mat1[i,8] = 1
+  } 
+  if (x%%7 == 0) {
+    feat_mat1[i,9] = 1
+  } 
+  if (sqrt(x) %% 1 == 0) {
+    feat_mat1[i,10] = 1
+  }
+  if (is_prime(x)) {
+    feat_mat1[i,11] = 1
+  }
+}
+feat_mat1
+
+```
+
+```{r}
+sim_mat_feat = matrix(0,10,10)
+rownames(sim_mat_feat) = numbers
+colnames(sim_mat_feat) = numbers
+sim_mat_feat
+
+for (i in 1:11) {
+  
+}
+```
