@@ -164,11 +164,11 @@ anx_count = demo %>% count(anxiety)
 ```
 
 ```{r}
-demo %>% group_by(gender) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = gen_count$n)
-demo %>% group_by(ethnicity) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = eth_count$n)
+demo %>% group_by(gender) %>% summarise(mean = mean(score)) %>% mutate(freq = gen_count$n) %>% arrange(desc(mean)) 
+demo %>% group_by(ethnicity) %>% summarise(mean = mean(score)) %>% mutate(freq = eth_count$n) %>% arrange(desc(mean)) 
 demo %>% group_by(college_semesters) %>% summarise(mean = mean(score)) %>% mutate(freq = sem_count$n)
-demo %>% group_by(math_freq) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = math_count$n)
-demo %>% group_by(profession) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = pro_count$n)
+demo %>% group_by(math_freq) %>% summarise(mean = mean(score)) %>% mutate(freq = math_count$n) %>% arrange(desc(mean)) 
+demo %>% group_by(profession) %>% summarise(mean = mean(score)) %>% mutate(freq = pro_count$n) %>% arrange(desc(mean)) 
 demo %>% group_by(anxiety) %>% summarise(mean = mean(score)) %>% mutate(freq = anx_count$n)
 ```
 
