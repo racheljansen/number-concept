@@ -1,0 +1,179 @@
+---
+title: "Math Lab"
+author: "Andrew Chen"
+date: "7/7/2018"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(magrittr)
+```
+
+###Cleaning Data
+```{r}
+lcd_data = read.csv('~/Desktop/Research/Extension_1.18.18_deidentified.csv', stringsAsFactors = FALSE)
+comparisons = lcd_data %>% filter(random != 5089 & random != 9502 & random != 6531) %>% select(c(7:206, 397)) %>% slice(3:99)
+
+for (i in 1:200) {
+  comparisons[, i] = as.integer(unlist(comparisons[, i]))
+}
+
+comparisons = comparisons %>% filter(attcheck1_1 > 90 & attcheck3_1 > 90 & attcheck5_1 > 90 & attcheck7_1 > 90 & attcheck9_1 > 90)
+
+comparisons = comparisons[-c(21,42,63,84,100,121,142,163,184,200)]
+```
+
+###Generating vectors of compared numbers
+```{r}
+numbers = c(5,14,16,9,29,8,11,20,18,21)
+numbers2 = c(7,25,12,17,28,6,13,4,27,10)
+num_mat = matrix(0,10,10)
+for (i in 1:10) {
+  num_mat[i,] = numbers
+  numbers = numbers[c(2:10, 1)]
+}
+
+for (j in 1:10) {
+  num_mat = cbind(num_mat, numbers2)
+  numbers2 = numbers2[c(2:10,1)]
+}
+
+colnames(num_mat) = rep(NULL, 20)
+```
+
+###Generating vectors of compared fields
+```{r}
+field1 <- c(rep(1, 10), rep(c(1, 11), 5))
+field2 <- c(2,16,3,17,4,18,5,19,6,20,11,rep(12:15, each = 2), 16)
+```
+
+###Changing columns into numbers that are compared
+```{r}
+x = 0
+f1 = 1
+f2 = 1
+while (i + x <= 190) {
+  if (x == 80 | x == 185) {
+    for (i in 1:5) {
+    colnames(comparisons)[i + x] = paste0(num_mat[i, field1[f1]], "/", num_mat[i, field2[f2]])
+    }
+    f1 = f1 + 1
+    f2 = f2 + 1
+    x = x + 5
+    next
+  } else {
+    for (i in 1:10) {
+    colnames(comparisons)[i + x] = paste0(num_mat[i, field1[f1]], "/", num_mat[i, field2[f2]])
+    }
+  }
+  x = x + 10
+  f1 = f1 + 1
+  f2 = f2 + 1
+  i = 5
+}
+```
+
+###Creating Table
+```{r}
+comp = data.frame(simrating = integer(),
+                  I = integer(),
+                  J = integer(),
+                  I_measure = character(),
+                  J_measure = character(),
+                  ID = integer(),
+                  stringsAsFactors = F)
+for (i in 1:84) {
+  part = comparisons[i, ]
+  for (j in 1:190) {
+    sim = as.integer(part[, j])
+    nums = as.integer(unlist(strsplit(colnames(part)[j], "/")))
+    lst = list()
+    lst[[1]] = sim
+    lst[[2]] = nums[1]
+    lst[[3]] = nums[2]
+    lst[[4]] = ifelse(is.element(nums[1], numbers), "A", "B")
+    lst[[5]] = ifelse(is.element(nums[2], numbers), "A", "B")
+    lst[[6]] = as.integer(part[, 191])
+    comp[190 * (i-1)+j, ] = lst
+  }
+}
+```
+
+###Converting Table to CSV
+```{r}
+write.csv(comp, file = '~/Desktop/Research/Comparisons.csv', row.names = F)
+```
+
+###Creating Table of Demographics and Scores
+```{r}
+demo = lcd_data %>% slice(3:102) %>% filter(random != 5089 & random != 9502 & random != 6531)
+
+for (i in 1:200) {
+  demo[, i] = as.integer(unlist(demo[, i]))
+}
+
+demo = demo %>% filter(attcheck1_1 > 90 & attcheck3_1 > 90 & attcheck5_1 > 90 & attcheck7_1 > 90 & attcheck9_1 > 90) %>% select(367:395)
+
+demo[, c(1,2,14:29)] = as.integer(unlist(demo[, c(1,2,14:29)]))
+
+colnames(demo)[1] = "anxiety"
+colnames(demo)[14:21] = paste0("r", 0:7)
+colnames(demo)[22:29] = paste0("w", 0:7)
+
+demo = demo %>% mutate(score = r0+r1+r2+r3+r4+r5+r6+r7-w0-w1-w2-w3-w4-w5-w6-w7)
+```
+
+###Attempt at Regression Analysis
+```{r}
+score_vs_anxiety = lm(demo$score ~ demo$anxiety)
+summary(score_vs_anxiety)
+
+score_vs_age = lm(demo$score ~ demo$age, demo)
+summary(score_vs_age)
+
+plot(demo$age, demo$score)
+abline(score_vs_age)
+
+plot(demo$anxiety, demo$score)
+abline(score_vs_anxiety)
+```
+
+###analysisssssssss
+```{r}
+hist(demo$score, breaks = 10)
+mean(demo$score)
+median(demo$score)
+sd(demo$score)
+```
+
+```{r}
+hist(demo$anxiety)
+mean(demo$anxiety)
+median(demo$anxiety)
+sd(demo$anxiety)
+```
+
+```{r}
+gen_count = demo %>% count(gender)
+eth_count = demo %>% count(ethnicity)
+math_count = demo %>% count(math_freq)
+sem_count = demo %>% count(college_semesters)
+pro_count = demo %>% count(profession)
+anx_count = demo %>% count(anxiety)
+```
+
+```{r}
+demo %>% group_by(gender) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = gen_count$n)
+demo %>% group_by(ethnicity) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = eth_count$n)
+demo %>% group_by(college_semesters) %>% summarise(mean = mean(score)) %>% mutate(freq = sem_count$n)
+demo %>% group_by(math_freq) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = math_count$n)
+demo %>% group_by(profession) %>% summarise(mean = mean(score)) %>% arrange(desc(mean)) %>% mutate(freq = pro_count$n)
+demo %>% group_by(anxiety) %>% summarise(mean = mean(score)) %>% mutate(freq = anx_count$n)
+```
+
+```{r}
+#Mean scores of age groups
+c1 = cut(demo$age, breaks = seq(20, 70, by = 10), include.lowest = T)
+tapply(demo$score, c1, mean)
+```
