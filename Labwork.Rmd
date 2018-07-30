@@ -74,37 +74,6 @@ while (i + x <= 190) {
 }
 ```
 
-###Creating Table
-```{r}
-comp = data.frame(simrating = integer(),
-                  I = integer(),
-                  J = integer(),
-                  I_measure = character(),
-                  J_measure = character(),
-                  ID = integer(),
-                  stringsAsFactors = F)
-for (i in 1:84) {
-  part = comparisons[i, ]
-  for (j in 1:190) {
-    sim = as.integer(part[, j])
-    nums = as.integer(unlist(strsplit(colnames(part)[j], "/")))
-    lst = list()
-    lst[[1]] = sim
-    lst[[2]] = nums[1]
-    lst[[3]] = nums[2]
-    lst[[4]] = ifelse(is.element(nums[1], numbers), "A", "B")
-    lst[[5]] = ifelse(is.element(nums[2], numbers), "A", "B")
-    lst[[6]] = as.integer(part[, 191])
-    comp[190 * (i-1)+j, ] = lst
-  }
-}
-```
-
-###Converting Table to CSV
-```{r}
-write.csv(comp, file = '~/Desktop/Research/Comparisons.csv', row.names = F)
-```
-
 ###Creating Table of Demographics and Scores
 ```{r}
 demo = lcd_data %>% slice(3:102) %>% filter(random != 5089 & random != 9502 & random != 6531)
@@ -176,4 +145,176 @@ demo %>% group_by(anxiety) %>% summarise(mean = mean(score)) %>% mutate(freq = a
 #Mean scores of age groups
 c1 = cut(demo$age, breaks = seq(20, 70, by = 10), include.lowest = T)
 tapply(demo$score, c1, mean)
+```
+
+```{r}
+lcd_data_w = read.csv('sim_data_with_weights.csv')
+weights = lcd_data_w[,438:459]
+```
+
+```{r}
+small_lm = lm(weights$small1 ~ weights$small2)
+plot(weights$small1, weights$small2)
+abline(small_lm)
+summary(small_lm)
+```
+
+```{r}
+med_lm = lm(weights$med1 ~ weights$med2)
+plot(weights$med1, weights$med2)
+abline(med_lm)
+summary(med_lm)
+```
+
+```{r}
+large_lm = lm(weights$large1 ~ weights$large2)
+plot(weights$large1, weights$large2)
+abline(large_lm)
+summary(large_lm)
+```
+
+```{r}
+even_lm = lm(weights$even1 ~ weights$even2)
+plot(weights$even1, weights$even2)
+abline(even_lm)
+summary(even_lm)
+```
+
+```{r}
+odd_lm = lm(weights$odd1 ~ weights$odd2)
+plot(weights$odd1, weights$odd2)
+abline(odd_lm)
+summary(odd_lm)
+```
+
+```{r}
+mult3_lm = lm(weights$mult31 ~ weights$mult32)
+plot(weights$mult31, weights$mult32)
+abline(mult3_lm)
+summary(mult3_lm)
+```
+
+```{r}
+mult4_lm = lm(weights$mult41 ~ weights$mult42)
+plot(weights$mult41, weights$mult42)
+abline(mult4_lm)
+summary(mult4_lm)
+```
+
+```{r}
+mult5_lm = lm(weights$mult51 ~ weights$mult52)
+plot(weights$mult51, weights$mult52)
+abline(mult5_lm)
+summary(mult5_lm)
+```
+
+```{r}
+mult7_lm = lm(weights$mult71 ~ weights$mult72)
+plot(weights$mult71, weights$mult72)
+abline(mult7_lm)
+summary(mult7_lm)
+```
+
+```{r}
+square_lm = lm(weights$square1 ~ weights$square2)
+plot(weights$square1, weights$square2)
+abline(square_lm)
+summary(square_lm)
+```
+
+```{r}
+prime_lm = lm(weights$prime1 ~ weights$prime2)
+plot(weights$prime1, weights$prime2)
+abline(prime_lm)
+summary(prime_lm)
+```
+
+```{r}
+avgs = c()
+for (i in 1:22) {
+  avgs[i] = mean(weights[,i])
+  names(avgs)[i] = names(weights)[i]
+}
+avgs
+```
+
+```{r}
+r_squared = c(summary(small_lm)$r.squared,
+              summary(med_lm)$r.squared,
+              summary(large_lm)$r.squared,
+              summary(even_lm)$r.squared,
+              summary(odd_lm)$r.squared,
+              summary(mult3_lm)$r.squared,
+              summary(mult4_lm)$r.squared,
+              summary(mult5_lm)$r.squared,
+              summary(mult7_lm)$r.squared,
+              summary(square_lm)$r.squared,
+              summary(prime_lm)$r.squared)
+names(r_squared) = c('small', 'med', 'large', 'even', 'odd', 'mult3', 'mult4', 'mult5', 'mult7', 'square', 'prime')
+sort(r_squared, decreasing = T)
+```
+
+```{r}
+avg_avgs = c()
+for (i in 1:11) {
+  avg_avgs[i] = mean(c(avgs[2*i - 1], avgs[2*i]))
+  names(avg_avgs)[i] = names(r_squared)[i]
+}
+
+sort(avg_avgs, decreasing = T)
+```
+
+```{r}
+plot(weights$small1, resid(small_lm))
+abline(0,0)
+plot(weights$med1, resid(med_lm))
+plot(weights$large1, resid(large_lm))
+plot(weights$even1, resid(even_lm))
+plot(weights$odd1, resid(odd_lm))
+plot(weights$mult31, resid(mult3_lm))
+plot(weights$mult41, resid(mult4_lm))
+plot(weights$mult51, resid(mult5_lm))
+plot(weights$mult71, resid(mult7_lm))
+plot(weights$square1, resid(square_lm))
+plot(weights$prime1, resid(prime_lm))
+```
+
+```{r}
+qqnorm(resid(small_lm))
+abline(0,1)
+```
+
+```{r}
+plot(small_lm$fitted.values, resid(small_lm))
+```
+
+###Creating Table
+```{r}
+comp = data.frame(simrating = integer(),
+                  I = integer(),
+                  J = integer(),
+                  I_measure = character(),
+                  J_measure = character(),
+                  ID = integer(),
+                  stringsAsFactors = F)
+for (i in 1:84) {
+  part = comparisons[i, ]
+  for (j in 1:190) {
+    sim = as.integer(part[, j])
+    nums = as.integer(unlist(strsplit(colnames(part)[j], "/")))
+    lst = list()
+    lst[[1]] = sim
+    lst[[2]] = nums[1]
+    lst[[3]] = nums[2]
+    lst[[4]] = ifelse(is.element(nums[1], numbers), "A", "B")
+    lst[[5]] = ifelse(is.element(nums[2], numbers), "A", "B")
+    lst[[6]] = as.integer(part[, 191])
+    comp[190 * (i-1)+j, ] = lst
+  }
+}
+```
+
+###Converting Table to CSV
+```{r}
+write.csv(comp, file = '~/Desktop/Research/Comparisons.csv', row.names = F)
 ```
