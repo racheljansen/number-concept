@@ -8,6 +8,7 @@ output: html_document
 ```{r}
 library(dplyr)
 library(magrittr)
+library(ggplot2)
 ```
 
 ###Cleaning Data
@@ -101,16 +102,14 @@ summary(score_vs_anxiety)
 score_vs_age = lm(demo$score ~ demo$age, demo)
 summary(score_vs_age)
 
-plot(demo$age, demo$score)
-abline(score_vs_age)
+ggplot(demo, aes(x = age, y = score)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 
-plot(demo$anxiety, demo$score)
-abline(score_vs_anxiety)
+ggplot(demo, aes(x = anxiety, y = score)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 ```
 
 ###analysisssssssss
 ```{r}
-hist(demo$score, breaks = 10)
+ggplot(demo, aes(score)) + geom_histogram(fill = "green", alpha = .5, breaks = seq(0, 50, 5)) + scale_x_continuous(limits = c(20, 50), breaks = seq(0,50,5))
 mean(demo$score)
 median(demo$score)
 sd(demo$score)
@@ -118,6 +117,8 @@ sd(demo$score)
 
 ```{r}
 hist(demo$anxiety)
+ggplot(demo, aes(anxiety)) + geom_histogram(fill = "green", alpha = .5, binwidth = 1) +
+  scale_x_continuous(breaks = seq(0,10,1))
 mean(demo$anxiety)
 median(demo$anxiety)
 sd(demo$anxiety)
@@ -154,78 +155,67 @@ weights = lcd_data_w[,438:459]
 
 ```{r}
 small_lm = lm(weights$small1 ~ weights$small2)
-plot(weights$small1, weights$small2)
-abline(small_lm)
 summary(small_lm)
+ggplot(weights, aes(small1, y = small2)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 ```
 
 ```{r}
 med_lm = lm(weights$med1 ~ weights$med2)
-plot(weights$med1, weights$med2)
-abline(med_lm)
+ggplot(weights, aes(med1, y = med2)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(med_lm)
 ```
 
 ```{r}
 large_lm = lm(weights$large1 ~ weights$large2)
-plot(weights$large1, weights$large2)
-abline(large_lm)
+ggplot(weights, aes(large1, y = large2)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(large_lm)
 ```
 
 ```{r}
 even_lm = lm(weights$even1 ~ weights$even2)
-plot(weights$even1, weights$even2)
-abline(even_lm)
+ggplot(weights, aes(even1, y = even2)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(even_lm)
 ```
 
 ```{r}
 odd_lm = lm(weights$odd1 ~ weights$odd2)
-plot(weights$odd1, weights$odd2)
-abline(odd_lm)
+ggplot(weights, aes(odd1, odd2)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(odd_lm)
 ```
 
 ```{r}
 mult3_lm = lm(weights$mult31 ~ weights$mult32)
-plot(weights$mult31, weights$mult32)
-abline(mult3_lm)
+ggplot(weights, aes(mult31, mult32)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(mult3_lm)
 ```
 
 ```{r}
 mult4_lm = lm(weights$mult41 ~ weights$mult42)
-plot(weights$mult41, weights$mult42)
-abline(mult4_lm)
+ggplot(weights, aes(mult41, mult42)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(mult4_lm)
 ```
 
 ```{r}
 mult5_lm = lm(weights$mult51 ~ weights$mult52)
-plot(weights$mult51, weights$mult52)
-abline(mult5_lm)
+ggplot(weights, aes(mult51, mult52)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(mult5_lm)
 ```
 
 ```{r}
 mult7_lm = lm(weights$mult71 ~ weights$mult72)
-plot(weights$mult71, weights$mult72)
-abline(mult7_lm)
+ggplot(weights, aes(mult71, y = mult72)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(mult7_lm)
 ```
 
 ```{r}
 square_lm = lm(weights$square1 ~ weights$square2)
-plot(weights$square1, weights$square2)
-abline(square_lm)
+ggplot(weights, aes(square1, square2)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(square_lm)
 ```
 
 ```{r}
 prime_lm = lm(weights$prime1 ~ weights$prime2)
-plot(weights$prime1, weights$prime2)
-abline(prime_lm)
+ggplot(weights, aes(prime1, y = prime2)) + geom_point(col = "red", size = 2, alpha = .5) + geom_smooth(method = lm)
 summary(prime_lm)
 ```
 
@@ -265,27 +255,72 @@ sort(avg_avgs, decreasing = T)
 ```
 
 ```{r}
-plot(weights$small1, resid(small_lm))
-abline(0,0)
-plot(weights$med1, resid(med_lm))
-plot(weights$large1, resid(large_lm))
-plot(weights$even1, resid(even_lm))
-plot(weights$odd1, resid(odd_lm))
-plot(weights$mult31, resid(mult3_lm))
-plot(weights$mult41, resid(mult4_lm))
-plot(weights$mult51, resid(mult5_lm))
-plot(weights$mult71, resid(mult7_lm))
-plot(weights$square1, resid(square_lm))
-plot(weights$prime1, resid(prime_lm))
+ggplot(weights, aes(small1, resid(small_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(med1, resid(med_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(large1, resid(large_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(even1, resid(even_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(odd1, resid(odd_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(mult31, resid(mult3_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(mult41, resid(mult4_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(mult51, resid(mult5_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
+
+ggplot(weights, aes(mult71, resid(mult7_lm))) + geom_point(col = "red", alpha = .5, size = 2) + geom_hline(yintercept = 0)
 ```
 
 ```{r}
-qqnorm(resid(small_lm))
-abline(0,1)
+ggplot(small_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(med_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(large_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(even_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(odd_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(mult3_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(mult4_lm) + geom_point(aes(x = .fitted, y = .resid),  size = 2,col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(mult5_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(mult7_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(square_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
+
+ggplot(prime_lm) + geom_point(aes(x = .fitted, y = .resid), size = 2, col = "blue", alpha = .5) + geom_hline(yintercept = 0)
 ```
 
+
 ```{r}
-plot(small_lm$fitted.values, resid(small_lm))
+ggplot(weights, aes(sample = rstandard(small_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(med_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(large_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(even_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(odd_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(mult3_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(mult4_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(mult5_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(mult7_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(square_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
+
+ggplot(weights, aes(sample = rstandard(prime_lm))) + geom_qq(col = "purple", alpha = .5, size = 2) + geom_abline(intercept = 0, slope = 1)
 ```
 
 ###Creating Table
