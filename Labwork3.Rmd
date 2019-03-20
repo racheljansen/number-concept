@@ -1,0 +1,464 @@
+---
+title: "Labwork3"
+author: "Andrew Chen"
+date: "2/7/2019"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(magrittr)
+```
+
+```{r}
+exam = read.csv('118.5 Woodcock Data Entry_1.18.19_RJ.csv', stringsAsFactors = F)
+exam$correct[which(is.na(exam$correct))] = 0
+```
+
+```{r}
+incorrect = exam[exam$correct == 0 & exam$response != "", ]
+exam[exam$response == "5.3", "correct"] = 1
+exam["3634", "correct"] = 1
+```
+
+```{r}
+id = c()
+standard = c()
+score = c()
+class = c()
+gender = c()
+order = c()
+batch = c()
+for(i in 1:65) {
+  x = exam$id[57*(i - 1) + 1]
+  standard[i] = exam$standard[57*(i - 1) + 1]
+  class[i] = exam$class[57*(i - 1) + 1]
+  gender[i] = exam$gender[57*(i - 1) + 1]
+  order[i] = exam$order[57*(i - 1) + 1]
+  batch[i] = exam$batch[57*(i - 1) + 1]
+  id[i] = x
+  score[i] = sum(exam[exam$id == x, ]$correct)
+}
+```
+
+##Exam Before Exclusions
+```{r}
+Exam = data.frame(id = id, standard = standard, class = class, gender = gender, order = order, batch = batch, score = score)
+
+summary(score)
+hist(score, breaks = 20)
+```
+
+###Summary Statistics of Data by Groups
+```{r}
+gen_count = Exam %>% count(gender)
+class_count = Exam %>% count(class)
+standard_count = Exam %>% count(standard)
+batch_count = Exam %>% count(batch)
+order_count = Exam %>% count(order)
+```
+
+```{r}
+Exam %>% group_by(gender) %>% summarise(mean = mean(score)) %>% mutate(freq = gen_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(class) %>% summarise(mean = mean(score)) %>% mutate(freq = class_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(standard) %>% summarise(mean = mean(score)) %>% mutate(freq = standard_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(batch) %>% summarise(mean = mean(score)) %>% mutate(freq = batch_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(order) %>% summarise(mean = mean(score)) %>% mutate(freq = order_count$n) %>% arrange(desc(mean))
+```
+
+###Relationship Between Gender and Score
+```{r}
+t.test(Exam[Exam$gender == "f",]$score, Exam[Exam$gender == "m",]$score)
+```
+
+###Relationship Between Standard and Score
+```{r}
+anova(lm(score ~ standard, data = Exam))
+```
+
+###Relationship Between Batch and Score
+```{r}
+anova(lm(score ~ batch, data = Exam))
+```
+
+###Relationship Between Order and Score
+```{r}
+t.test(Exam[Exam$order == "kinship first",]$score, Exam[Exam$order == "number first",]$score)
+```
+
+###Relationship Between Class and Score
+```{r}
+anova(lm(score ~ class, data = Exam[-which(Exam$standard == 7),]))
+```
+
+##Number Similarity Data: Before Exclusions
+```{r}
+number = read.csv('118.5 Number Similarity Data Entry_2.19.19_RJ.csv', stringsAsFactors = F)
+number = number[-which(number$item1 == "reflection" | number$form == "reflection"),]
+```
+
+####Unifying Data
+```{r}
+id = c()
+standard = c()
+class = c()
+gender = c()
+order = c()
+version = c()
+
+for (i in 1:66) {
+  id[i] = number$id[98 * (i - 1) + 1]
+  standard[i] = number$standard[98 * (i-1) + 1]
+  class[i] = number$class[98*(i-1)+1]
+  gender[i] = number$gender[98*(i-1)+1]
+  order[i] = number$order[98*(i-1)+1]
+  version[i] =  ifelse(grepl('versa', number$version[98*(i-1)+1]) == TRUE, 'versa', 'vice')
+}
+
+Number = data.frame(id = id, standard = standard, class = class, gender = gender, order = order, version = version)
+```
+
+###Isolating Attention Checks
+```{r}
+attention = number[number$item1 == number$item2,]
+number = number[-which(number$item1 == number$item2),]
+```
+
+###Adding Attention Check Scores
+```{r}
+num1att = c()
+num2att = c()
+for (i in 1:66) {
+  num1att[i] = sum(attention[(8*(i-1)+1):(8*(i-1)+4),]$response == 5)
+  num2att[i] = sum(attention[(8*(i-1)+5):(8*i),]$response == 5)
+}
+
+Number = cbind(Number, num1att, num2att)
+```
+
+###Creating Matrix of Numbers
+```{r}
+numbers = c(5,14,16,9,29,8,11,20,18,21)
+numbers2 = c(7,25,12,17,28,6,13,4,27,10)
+num_mat = matrix(0,10,10)
+num_mat2 = matrix(0,10,10)
+for (i in 1:10) {
+  num_mat[,i] = numbers
+  numbers = numbers[c(2:10, 1)]
+}
+
+for (j in 1:10) {
+  num_mat2[,j] = numbers2
+  numbers2 = numbers2[c(2:10,1)]
+}
+
+num_mat = cbind(num_mat, num_mat2)
+colnames(num_mat) = rep(NULL, 20)
+```
+
+###Adding columns of compared number pairs
+```{r}
+cols = c()
+cols2 = c()
+total = 0
+
+for (i in 1:9) {
+  x = 9 - (i - 1)
+  for (j in 1:x) {
+    num1 = num_mat[j, 1]
+    num2 = num_mat[j, i+1]
+    n1 = num_mat2[j, 1]
+    n2 = num_mat2[j, i+1]
+    nums = paste0(num1, '/', num2)
+    ns = paste0(n1, '/', n2)
+    cols[total + j] = nums
+    cols2[total + j] = ns
+  }
+  total = total + x
+}
+```
+
+```{r}
+for (i in 1:90) {
+  ratings = c()
+  for (j in 1:66) {
+    ratings[j] = number[90*(j-1)+i,"response"]
+    ratings = as.numeric(ratings)
+  }
+  Number = cbind(Number, ratings)
+}
+```
+
+```{r}
+for (i in 1:45) {
+  colnames(Number)[8+i] = cols[i]
+  colnames(Number)[53+i] = cols2[i]
+}
+```
+
+###Fixing Dates & Responses
+```{r}
+number[number$dot == "17-Jan", "dot"] = '19/1/17'
+number[number$dot == "10/1/10", "dot"] = '19/1/10'
+number[number$response == 44 & !is.na(number$response), "response"] = 4
+```
+
+###Counting Correct Attention Checks
+```{r}
+a = rep(0:4, each = 5)
+b = rep(0:4, 5)
+att_counts = c()
+categories = c()
+
+for (i in 1:25) {
+  att_counts[i] = nrow(Number[Number$num1att == a[i] & Number$num2att == b[i], ])
+  categories[i] = paste0(a[i], '/', b[i])
+}
+
+names(att_counts) = categories
+att_counts
+```
+
+###Adding Exam Scores to Number Data
+```{r}
+scores = rep(NA, nrow(Number))
+for (i in 1:nrow(Number)) {
+  index = which(grepl(Exam$id[i], Number$id) == T)
+  scores[index] = Exam$score[i]
+}
+
+Number = cbind(Number, scores)
+```
+
+###Counting NAs
+```{r}
+NAs = c()
+for(i in 1:66) {
+  NAs[i] = sum(is.na(Number[i,]))
+}
+Number = cbind(Number, NAs)
+table(Number$NAs)
+```
+
+###Regression of Response with Standard and Version
+```{r}
+number$response = as.numeric(number$response)
+vers = c()
+for (i in 1:nrow(number)) {
+  vers[i] = ifelse(grepl('vice', number[i, "version"]), 'vice', 'versa')
+}
+number = cbind(number, vers)
+mod = lm(response ~ vers + standard, data = number)
+summary(mod)
+```
+
+###Boxplot and Summary of Vice vs. Versa
+```{r}
+boxplot(number$response ~ number$vers)
+summary(number[number$vers == "vice", "response"])
+summary(number[number$vers == "versa", "response"])
+```
+
+##After Exclusions
+
+###Found NA or missing data for a single participant in Exam
+```{r}
+matches = c()
+for(i in 1:66) {
+  matches[i] = match(Number$id[i], Exam$id)
+}
+matches
+```
+
+###Making Exclusions in Number Data
+```{r}
+Number$id = as.character(Number$id)
+Exam$id = as.character(Exam$id)
+Number = Number[(Number$NAs < 5), ]
+Number = Number[(Number$num1att > 2 & Number$num2att > 2), ]
+rownames(Number) = 1:nrow(Number)
+Number = Number[-36, ]
+```
+
+###Corresponding Exclusions in Exam Data
+```{r}
+indices = c()
+for (i in 1:nrow(Number)) {
+  indices[i] = which(Exam$id == as.character(Number$id[i]))
+}
+
+Exam = Exam[indices, ]
+rownames(Exam) = 1:nrow(Exam)
+```
+
+###Corresponding Exclusions in Original Number Data
+```{r}
+number$id = as.character(number$id)
+indices = c()
+for (i in 1:nrow(Number)) {
+  indices = c(indices, which(number$id == as.character(Number$id[i])))
+}
+
+number = number[indices, ]
+rownames(number) = 1:nrow(number)
+```
+
+###Regression of Response with Standard and Version - Post Exclusion
+```{r}
+mod = lm(response ~ vers + standard, data = number)
+summary(mod)
+```
+
+###Boxplot and Summary of Vice vs. Versa - Post Exclusion
+```{r}
+boxplot(number$response ~ number$vers)
+summary(number[number$vers == "vice", "response"])
+summary(number[number$vers == "versa", "response"])
+```
+
+##Exam Data Analysis - Post Exclusion
+
+###Summary Statistics of Data by Groups
+```{r}
+gen_count = Exam %>% count(gender)
+class_count = Exam %>% count(class)
+standard_count = Exam %>% count(standard)
+batch_count = Exam %>% count(batch)
+order_count = Exam %>% count(order)
+```
+
+```{r}
+Exam %>% group_by(gender) %>% summarise(mean = mean(score)) %>% mutate(freq = gen_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(class) %>% summarise(mean = mean(score)) %>% mutate(freq = class_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(standard) %>% summarise(mean = mean(score)) %>% mutate(freq = standard_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(batch) %>% summarise(mean = mean(score)) %>% mutate(freq = batch_count$n) %>% arrange(desc(mean))
+
+Exam %>% group_by(order) %>% summarise(mean = mean(score)) %>% mutate(freq = order_count$n) %>% arrange(desc(mean))
+```
+
+###Relationship Between Gender and Score
+```{r}
+t.test(Exam[Exam$gender == "f",]$score, Exam[Exam$gender == "m",]$score)
+```
+
+###Relationship Between Standard and Score
+```{r}
+anova(lm(score ~ standard, data = Exam))
+```
+
+###Relationship Between Batch and Score
+```{r}
+anova(lm(score ~ batch, data = Exam))
+```
+
+###Relationship Between Order and Score
+```{r}
+t.test(Exam[Exam$order == "kinship first",]$score, Exam[Exam$order == "number first",]$score)
+```
+
+###Relationship Between Class and Score
+```{r}
+anova(lm(score ~ class, data = Exam[-which(Exam$standard == 7),]))
+```
+
+###Pairwise Boxplots
+```{r}
+par(mfrow = c(3,4))
+for(i in 1:90) {
+  boxplot(Number[, 8+i], main = colnames(Number)[8+i])
+}
+```
+
+##MDS Plot: Grand Average
+```{r}
+avg_comp = c()
+for (i in 1:90) {
+  avg_comp[i] = mean(Number[,8+i],na.rm = T)
+}
+
+names(avg_comp) = colnames(Number)[9:98]
+
+sim_mat1 = matrix(0,10,10)
+sim_mat2 = matrix(0,10,10)
+rownames(sim_mat1) = as.character(numbers)
+colnames(sim_mat1) = as.character(numbers)
+rownames(sim_mat2) = as.character(numbers2)
+colnames(sim_mat2) = as.character(numbers2)
+
+for (j in 1:10) {
+  sim_mat1[j, j] = 100
+  sim_mat2[j, j] = 100
+}
+
+for (i in 1:45) {
+  nums1 = unlist(strsplit(names(avg_comp)[i], split = "/"))
+  nums2 = unlist(strsplit(names(avg_comp)[45+i], split = "/"))
+  sim_mat1[nums1[1], nums1[2]] = avg_comp[i] * 20
+  sim_mat1[nums1[2], nums1[1]] = avg_comp[i] * 20
+  sim_mat2[nums2[1], nums2[2]] = avg_comp[45+i] * 20
+  sim_mat2[nums2[2], nums2[1]] = avg_comp[45+i] * 20
+}
+
+```
+
+```{r}
+mds_avg1 = cmdscale(100 - sim_mat1)
+mds_avg2 = cmdscale(100 - sim_mat2)
+plot(mds_avg1,cex = .1)
+abline(v=0,h=0)
+text(mds_avg1[,1], mds_avg1[,2], labels = numbers)
+plot(mds_avg2,cex = .1)
+abline(v=0,h=0)
+text(mds_avg2[,1], mds_avg2[,2], labels = numbers2)
+```
+
+###MDS Plots by Standard
+```{r}
+for (g in 3:7) {
+  avg_comp = c()
+  for (i in 1:90) {
+    avg_comp[i] = mean(Number[Number$standard == g , 8+i],na.rm = T)
+  }
+
+  names(avg_comp) = colnames(Number)[9:98]
+
+  sim_mat1 = matrix(0,10,10)
+  sim_mat2 = matrix(0,10,10)
+  rownames(sim_mat1) = as.character(numbers)
+  colnames(sim_mat1) = as.character(numbers)
+  rownames(sim_mat2) = as.character(numbers2)
+  colnames(sim_mat2) = as.character(numbers2)
+
+  for (j in 1:10) {
+    sim_mat1[j, j] = 100
+    sim_mat2[j, j] = 100
+  }
+
+  for (i in 1:45) {
+    nums1 = unlist(strsplit(names(avg_comp)[i], split = "/"))
+    nums2 = unlist(strsplit(names(avg_comp)[45+i], split = "/"))
+    sim_mat1[nums1[1], nums1[2]] = avg_comp[i] * 20
+    sim_mat1[nums1[2], nums1[1]] = avg_comp[i] * 20
+    sim_mat2[nums2[1], nums2[2]] = avg_comp[45+i] * 20
+    sim_mat2[nums2[2], nums2[1]] = avg_comp[45+i] * 20
+  }
+
+  mds_avg1 = cmdscale(100 - sim_mat1)
+  mds_avg2 = cmdscale(100 - sim_mat2)
+  plot(mds_avg1,cex = .1, main = paste("MDS Plot 1, Standard", g))
+  abline(v=0,h=0)
+  text(mds_avg1[,1], mds_avg1[,2], labels = numbers)
+  plot(mds_avg2,cex = .1, main = paste("MDS Plot 2, Standard", g))
+  abline(v=0,h=0)
+  text(mds_avg2[,1], mds_avg2[,2], labels = numbers2)
+}
+
+
+```
