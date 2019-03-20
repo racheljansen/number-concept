@@ -372,7 +372,7 @@ anova(lm(score ~ class, data = Exam[-which(Exam$standard == 7),]))
 ```{r}
 par(mfrow = c(3,4))
 for(i in 1:90) {
-  boxplot(Number[, 8+i], main = colnames(Number)[8+i])
+  boxplot(Number[, 8+i] ~ Number$version, main = colnames(Number)[8+i])
 }
 ```
 
