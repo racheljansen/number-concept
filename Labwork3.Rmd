@@ -304,6 +304,11 @@ number = number[indices, ]
 rownames(number) = 1:nrow(number)
 ```
 
+```{r}
+summary(Exam$score)
+hist(Exam$score, breaks = 20)
+```
+
 ###Regression of Response with Standard and Version - Post Exclusion
 ```{r}
 mod = lm(response ~ vers + standard, data = number)
@@ -388,21 +393,21 @@ t.test(Number[Number$version == "vice", "8/21"], Number[Number$version == "versa
 t.test(Number[Number$version == "vice", "5/21"], Number[Number$version == "versa", "5/21"])
 
 par(mfrow = c(3,2))
-boxplot(Number[Number$standard == 3 | Number$standard == 4, "16/9"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "16/9, Standard 3 & 4")
+boxplot(Number[Number$standard == 3 | Number$standard == 4, "16/9"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "16/9, Standard 3 & 4", names = c("9/16", "16/9"))
 
-boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "16/9"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "16/9, Standard 5-7")
+boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "16/9"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "16/9, Standard 5-7", names = c("9/16", "16/9"))
 
-boxplot(Number[Number$standard == 3 | Number$standard == 4, "5/20"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "5/20, Standard 3 & 4")
+boxplot(Number[Number$standard == 3 | Number$standard == 4, "5/20"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "5/20, Standard 3 & 4", names = c("20/5", "5/20"))
 
-boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "5/20"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "5/20, Standard 5-7")
+boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "5/20"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "5/20, Standard 5-7", names = c("20/5", "5/20"))
 
-boxplot(Number[Number$standard == 3 | Number$standard == 4, "8/21"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "8/21, Standard 3 & 4")
+boxplot(Number[Number$standard == 3 | Number$standard == 4, "8/21"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "8/21, Standard 3 & 4", names = c("21/8", "8/21"))
 
-boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "8/21"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "8/21, Standard 5-7")
+boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "8/21"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "8/21, Standard 5-7", names = c("21/8", "8/21"))
 
-boxplot(Number[Number$standard == 3 | Number$standard == 4, "5/21"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "5/21, Standard 3 & 4")
+boxplot(Number[Number$standard == 3 | Number$standard == 4, "5/21"] ~ Number[Number$standard == 3 | Number$standard == 4,]$version, main = "5/21, Standard 3 & 4", names = c("21/5", "5/21"))
 
-boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "5/21"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "5/21, Standard 5-7")
+boxplot(Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7 , "5/21"] ~ Number[Number$standard == 5 | Number$standard == 6 | Number$standard == 7,]$version, main = "5/21, Standard 5-7", names = c("21/5", "5/21"))
 ```
 
 ##MDS Plot: Grand Average
